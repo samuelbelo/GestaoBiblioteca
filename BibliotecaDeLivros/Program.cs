@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dominio;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -7,14 +8,15 @@ namespace BibliotecaDeLivros
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.CreateSpecificCulture("pt-BR");
 
             const string pressioneQualquerTecla = "Pressione qualquer tecla para exibir o menu principal ...";
             string opcaoEscolhida;
 
-            var listaLivros = new Dictionary<string, DateTime>();
+            //var listaLivros = new Dictionary<string, DateTime>();
+            var listaLivros = new List<Livro>();
             do
             {
                 Console.Clear();
@@ -29,14 +31,14 @@ namespace BibliotecaDeLivros
                 {
                     Console.WriteLine("Informe o nome, ou parte do nome do livro que deseja encontrar:");
                     var termoDePesquisa = Console.ReadLine();
-                    var livrosEncontrados = listaLivros.Where(x => x.Key.ToLower().Contains(termoDePesquisa.ToLower()))
+                    var livrosEncontrados = listaLivros.Where(x => x.Nome.ToLower().Contains(termoDePesquisa.ToLower()))
                                                        .ToList();
 
                     if (livrosEncontrados.Count > 0)
                     {
                         Console.WriteLine("Selecione uma das opções abaixo para visualizar os dados de um dos livros encontrados:");
                         for (var index = 0; index < livrosEncontrados.Count; index++)
-                            Console.WriteLine($"{index} - {livrosEncontrados[index].Key}");
+                            Console.WriteLine($"{index} - {livrosEncontrados[index].Nome}");
 
                         ushort indexAExibir;
                         if (!ushort.TryParse(Console.ReadLine(), out indexAExibir) || indexAExibir >= livrosEncontrados.Count)
@@ -51,15 +53,17 @@ namespace BibliotecaDeLivros
                             var livro = livrosEncontrados[indexAExibir];
 
                             Console.WriteLine("Dados da livro");
-                            Console.WriteLine($"Nome: {livro.Key}");
-                            Console.WriteLine($"Data de lançamento: {livro.Value:dd/MM/yyyy}");
+                            Console.WriteLine($"Nome: {livro.Nome}");
+                            Console.WriteLine($"Data de lançamento: {livro.DataLancamento:dd/MM/yyyy}");
 
-                            if (livro.Value.Year < DateTime.Now.Year)
+                            var qtdeAnos = livro.CalcularQuantosAnosFoiLancado();
+
+                            if (qtdeAnos > 0)
                             {
-                                var tempo = DateTime.Now.Year - livro.Value.Year;
+                                var tempo = DateTime.Now.Year - livro.DataLancamento.Year;
                                 Console.Write($"Este livro foi lançado há {tempo} ano(s). {pressioneQualquerTecla}");
                             }
-                            else if (livro.Value < DateTime.Now)
+                            else if (qtdeAnos == 0)
                             {
                                 Console.Write($"Este livro foi lançado este ano! {pressioneQualquerTecla}");
                             }
@@ -102,7 +106,8 @@ namespace BibliotecaDeLivros
 
                     if (opcaoParaAdicionar == "1")
                     {
-                        listaLivros.Add(nomeLivro, dataLancamento);
+                        var livro = new Livro(nomeLivro, dataLancamento);
+                        listaLivros.Add(livro);
                         Console.WriteLine($"Dados adicionados com sucesso! {pressioneQualquerTecla}");
 
                     }
